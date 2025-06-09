@@ -1,0 +1,42 @@
+name: Build WireGuard-Go 32-bit DLL
+
+on:
+  release:
+    types: [created]  # 发布新版本时触发编译
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          
+      - name: Install mingw-w64 (32-bit)
+        run: |
+          choco install mingw -y
+          echo "C:\tools\mingw64\i686-w64-mingw32\bin" >> $env:GITHUB_PATH
+          
+      - name: Build 32-bit DLL
+        run: |
+          $env:GOOS = "windows"
+          $env:GOARCH = "386"        # 32位架构
+          $env:CGO_ENABLED = "1"
+          $env:CC = "i686-w64-mingw32-gcc"  # 32位编译器
+          $env:GO386 = "sse2"        # 启用SSE2指令集
+          go build -buildmode=c-shared -o wireguard-go-x86.dll .
+          
+      - name: Upload 32-bit DLL
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./wireguard-go-x86.dll
+          asset_name: wireguard-go-x86.dll
+          asset_content_type: application/octet-stream
