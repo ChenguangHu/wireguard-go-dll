@@ -80,3 +80,4 @@ jobs:
           asset_path: ./wireguard-go-x86.dll
           asset_name: wireguard-go-x86.dll
           asset_content_type: application/octet-stream
+          
